@@ -115,6 +115,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\BaseUnit.h" />
+    <ClInclude Include="src\calcu.h" />
+    <ClInclude Include="src\MyStack.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\BaseUnit.cpp" />
+    <ClCompile Include="src\calcu.cpp" />
+    <ClCompile Include="src\calculator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="pic\struct.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
