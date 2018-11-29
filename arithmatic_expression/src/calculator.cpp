@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include<Windows.h>
 #include"calcu.h"
+#define FOREGROUND_CUS_L  FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_INTENSITY
 void ShowGuide();
 void BackLine();
 void BackLine(const COORD &);
@@ -16,6 +17,7 @@ int main(int argc, char** argv)
 	std::cout << "<Press N to exit>" << std::endl;
 	char choice, cache;
 	choice = ' ';
+	WORD oldColor = MyLab::Setcolor(FOREGROUND_CUS_L);
 	do
 	{
 		COORD current_pos = GetCurrPos();
@@ -27,7 +29,11 @@ int main(int argc, char** argv)
 			BackLine(current_pos);
 			std::cout << obj << std::endl;
 			std::cin.clear();
-		}		
+		}
+		else
+		{
+			MyLab::Setcolor(oldColor);
+		}
 	} while (choice != 'N' && choice != 'n');
 	while ((cache = std::cin.get()) != '\n')
 	{
@@ -40,9 +46,9 @@ int main(int argc, char** argv)
 
 void ShowGuide()
 {
-	std::cout << "**********************";
+	std::cout << "*************************";
 	std::cout << "welcome to calculator v3.0";
-	std::cout << "**********************" << std::endl;
+	std::cout << "*************************" << std::endl;
 	std::cout << "User manual:" << std::endl;
 	std::cout << "1.what is the valid expression?" << std::endl;
 	std::cout << "   a. The simple arithmatic expression that contains valid operators and operands." << std::endl;
@@ -75,7 +81,7 @@ void BackLine(const COORD &pos)
 	SetConsoleCursorPosition(curr, pos);
 	short lines = csbi.dwCursorPosition.Y - pos.Y + 1;
 	short width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-	for (size_t i = 0; i < lines; i++)
+	for (short i = 0; i < lines; i++)
 	{
 		for (short j = 0; j < width; j++)
 		{

@@ -76,7 +76,7 @@ namespace MyLab
 
 	bool calcu::validCheck()
 	{
-		MyStack<char> left;
+		MyStack<size_t> left;
 		size_t len = raw_expression.length();
 		char current;
 		char pre = ' ';
@@ -88,6 +88,7 @@ namespace MyLab
 			{
 				if (pre == ')' || pre == '=')
 				{
+					error_index = i;
 					return false;
 				}
 			}
@@ -95,17 +96,19 @@ namespace MyLab
 			{
 				if (calcu::isDigit(pre) || pre == ')' || pre == '.' || pre == '=')
 				{
+					error_index = i;
 					return false;
 				}
 				else
 				{
-					left.push(current);
+					left.push(i);
 				}
 			}
 			else if (current == ')')
 			{
 				if (left.empty())
 				{
+					error_index = i;
 					return false;
 				}
 				else
@@ -127,6 +130,7 @@ namespace MyLab
 				{
 					if (current != '+' && current != '-')
 					{
+						error_index = i;
 						return false;
 					}					
 				}
@@ -134,10 +138,12 @@ namespace MyLab
 				{
 					if (pre != '(' && pre != ')')
 					{
+						error_index = i;
 						return false;
 					}	
 					else if (current == '=' && i != len - 1)
 					{
+						error_index = i;
 						return false;
 					}
 				}
@@ -146,6 +152,7 @@ namespace MyLab
 			{
 				if (!calcu::isDigit(pre) || pre_dot == '.')
 				{
+					error_index = i;
 					return false;
 				}
 				else
@@ -155,12 +162,19 @@ namespace MyLab
 			}
 			else
 			{
+				error_index = i;
 				return false;
 			}
 			pre = current;
 		}
 		if (raw_expression[len - 1] != '=')
 		{
+			error_index = len - 1;
+			return false;
+		}
+		else if (!left.empty())
+		{
+			error_index = left.top();
 			return false;
 		}
 		else
@@ -265,11 +279,11 @@ namespace MyLab
 		return local_rt;
 	}
 
-	calcu::calcu() : raw_expression(""), checked(true), isValid(false), isCalculated(false), zeroDivision(false), undefine(false), invalidStr(true), inexact(false), outrange(false)
+	calcu::calcu() : raw_expression(""), error_index(-1), checked(true), isValid(false), isCalculated(false), zeroDivision(false), undefine(false), invalidStr(true), inexact(false), outrange(false)
 	{
 	}
 
-	calcu::calcu(const std::string & expr_str) : isCalculated(false), zeroDivision(false), undefine(false), inexact(false), outrange(false)
+	calcu::calcu(const std::string & expr_str) : error_index(-1), isCalculated(false), zeroDivision(false), undefine(false), inexact(false), outrange(false)
 	{
 		raw_expression = expr_str;
 		raw_expression = trim_all(raw_expression);//剔除空格
@@ -281,6 +295,7 @@ namespace MyLab
 	calcu::calcu(const calcu & other)
 	{
 		raw_expression = other.raw_expression;
+		error_index = other.error_index;
 		rt = other.rt;
 		checked = other.checked;
 		isValid = other.isValid;
@@ -295,6 +310,7 @@ namespace MyLab
 	calcu::calcu(calcu &&other)
 	{
 		raw_expression = std::move(other.raw_expression);
+		error_index = other.error_index;
 		rt = other.rt;
 		checked = other.checked;
 		isValid = other.isValid;
@@ -443,6 +459,7 @@ namespace MyLab
 	{
 		raw_expression.clear();
 		raw_expression = "";
+		error_index = -1;
 		rt = 0ll;
 		checked = true;
 		isValid = false;
@@ -458,6 +475,7 @@ namespace MyLab
 	{
 		raw_expression.clear();
 		raw_expression = other.raw_expression;
+		error_index = other.error_index;
 		rt = other.rt;
 		checked = other.checked;
 		isValid = other.isValid;
@@ -473,6 +491,7 @@ namespace MyLab
 	{
 		raw_expression.clear();
 		raw_expression = std::move(other.raw_expression);
+		error_index = other.error_index;
 		rt = other.rt;
 		checked = other.checked;
 		isValid = other.isValid;
@@ -509,29 +528,23 @@ namespace MyLab
 		{
 			obj.Calculate();
 		}
-		if (obj.isValid)
+		char current, pre = '(';
+		size_t len = obj.raw_expression.length() - 1;
+		WORD preColor;
+		for (size_t i = 0; i < len; i++)
 		{
-			char current, pre = '(';			
-			size_t len = obj.raw_expression.length() - 1;
-			for (size_t i = 0; i < len; i++)
+			if (obj.error_index == i)
 			{
-				current = obj.raw_expression[i];
-				if (!obj.isOperator(current))
-				{
-					os << current;
-				}
-				else if (current == '+' || current == '-')
-				{
-					if (pre == '(')
-					{
-						os <<current;
-					}
-					else
-					{
-						os << ' ' << current << ' ';
-					}
-				}
-				else if (current == '^' || current == '&'|| current == '(' || current == ')')
+				preColor = Setcolor(FOREGROUND_RED | BACKGROUND_GREEN);
+			}			
+			current = obj.raw_expression[i];
+			if (!obj.isOperator(current))
+			{
+				os << current;
+			}
+			else if (current == '+' || current == '-')
+			{
+				if (pre == '(')
 				{
 					os << current;
 				}
@@ -539,32 +552,86 @@ namespace MyLab
 				{
 					os << ' ' << current << ' ';
 				}
-				pre = current;
 			}
+			else if (current == '^' || current == '&' || current == '(' || current == ')')
+			{
+				os << current;
+			}
+			else
+			{
+				os << ' ' << current << ' ';
+			}
+			if (obj.error_index == i)
+			{
+				Setcolor(preColor);
+			}
+			pre = current;
+		}
+		if (obj.error_index == len)
+		{
+			os << ' ';
+			preColor = Setcolor(FOREGROUND_RED | BACKGROUND_GREEN);
+			os << '=';
+			Setcolor(preColor);
+			os << ' ';
+		}
+		else
+		{
+			os << ' ' << '=' << ' ';
+		}	
+		if (obj.isValid)
+		{
+			
 			std::streamsize curr_en = os.precision(16);
-			os << ' ' << '=' << ' ' << obj.rt;
+			os << obj.rt;
 			os.precision(curr_en);
 			if (obj.inexact)
 			{
+				preColor = Setcolor(FOREGROUND_GREEN);
 				os << " <MAY BE INEXACT>";
+				Setcolor(preColor);
 			}
 		}
 		else if (obj.invalidStr)
 		{
-			os << "error, invalid expression...";
+			preColor = Setcolor(FOREGROUND_RED);
+			os << "Error, invalid expression";
+			if (obj.raw_expression[obj.error_index] == '(' || obj.raw_expression[obj.error_index] == ')')
+			{
+				os << ". Unmatched bracket detected...";
+			}
+			else
+			{
+				os << "...";
+			}
+			Setcolor(preColor);
 		}
 		else if (obj.zeroDivision)
 		{
-			os << "error, zerodivision...";
+			preColor = Setcolor(FOREGROUND_RED);
+			os << "Error, zerodivision...";
+			Setcolor(preColor);
 		}
 		else if (obj.undefine)
 		{
-			os << "error, undefined behavier...";
+			preColor = Setcolor(FOREGROUND_RED);
+			os << "Error, undefined behavier...";
+			Setcolor(preColor);
 		}
 		else
 		{
-			os << "error, at least one operand is out of range..";
+			preColor = Setcolor(FOREGROUND_RED);
+			os << "Error, at least one operand is out of range..";
+			Setcolor(preColor);
 		}
 		return os;
+	}
+	WORD Setcolor(unsigned short color)
+	{
+		HANDLE curr = GetStdHandle(STD_OUTPUT_HANDLE);
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		GetConsoleScreenBufferInfo(curr, &csbi);
+		SetConsoleTextAttribute(curr, color);
+		return csbi.wAttributes;
 	}
 }

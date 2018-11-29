@@ -5,6 +5,7 @@
 #include<string>
 #include<cmath>
 #include<stdexcept>
+#include<Windows.h>
 #include"MyStack.h"
 #include"BaseUnit.h"
 #pragma fenv_access (on)
@@ -14,10 +15,12 @@ namespace MyLab
 {
 constexpr auto INVALIDCHAR = 'a';
 
+
 	class calcu
 	{
 	private:
 		std::string raw_expression;//原生表达式，无空白字符
+		size_t error_index;//首个错误位置
 		BaseUnit rt;//结果存储
 		bool checked;//标识是否已进行合法性检测
 		bool isValid;//合法性标识，仅在checked为真时有效
@@ -61,4 +64,6 @@ constexpr auto INVALIDCHAR = 'a';
 		friend std::istream &operator>>(std::istream &, calcu &);
 		friend std::ostream &operator<<(std::ostream &, calcu &);
 	};
+
+	WORD Setcolor(unsigned short);
 }
